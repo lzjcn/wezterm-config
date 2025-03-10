@@ -19,7 +19,8 @@ return {
    cursor_blink_rate = 650,
 
    -- color scheme
-   colors = colors,
+   color_scheme = 'Tokyo Night',
+   -- colors = colors,
 
    -- background
    background = backdrops:initial_options(false), -- set to true if you want wezterm to start on focus mode
@@ -34,6 +35,10 @@ return {
    tab_max_width = 25,
    show_tab_index_in_tab_bar = false,
    switch_to_last_active_tab_when_closing_tab = true,
+
+   window_background_opacity = 0.8,
+   -- 在 macOS 上开启窗口模糊效果，数值越大模糊越明显。
+   macos_window_background_blur = 30,
 
    -- window
    window_padding = {

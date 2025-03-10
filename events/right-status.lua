@@ -2,6 +2,8 @@ local wezterm = require('wezterm')
 local umath = require('utils.math')
 local Cells = require('utils.cells')
 local OptsValidator = require('utils.opts-validator')
+local ip = require('utils.ip')
+
 
 ---@alias Event.RightStatusOptions { date_format?: string }
 
@@ -23,8 +25,15 @@ local attr = Cells.attr
 
 local M = {}
 
-local ICON_SEPARATOR = nf.oct_dash
+-- local ICON_SEPARATOR = nf.oct_dash
+local ICON_SEPARATOR = '|'
+
 local ICON_DATE = nf.fa_calendar
+
+local ICON_LAN = nf.md_lan
+local ICON_NETWORK = nf.md_network
+local ICON_CLOCK = nf.md_clock
+
 
 ---@type string[]
 local discharging_icons = {
@@ -58,17 +67,28 @@ local charging_icons = {
 local colors = {
    date      = { fg = '#fab387', bg = 'rgba(0, 0, 0, 0.4)' },
    battery   = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
+   local_ip   = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
+   public_ip   = { fg = '#fab387', bg = 'rgba(0, 0, 0, 0.4)' },
    separator = { fg = '#74c7ec', bg = 'rgba(0, 0, 0, 0.4)' }
 }
 
 local cells = Cells:new()
 
 cells
-   :add_segment('date_icon', ICON_DATE .. '  ', colors.date, attr(attr.intensity('Bold')))
-   :add_segment('date_text', '', colors.date, attr(attr.intensity('Bold')))
    :add_segment('separator', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+
+   :add_segment('date_icon', ICON_CLOCK .. '  ', colors.date, attr(attr.intensity('Bold')))
+   :add_segment('date_text', '', colors.date, attr(attr.intensity('Bold')))
+
    :add_segment('battery_icon', '', colors.battery)
    :add_segment('battery_text', '', colors.battery, attr(attr.intensity('Bold')))
+
+   :add_segment('local_ip_icon', ICON_LAN .. '  ', colors.local_ip, attr(attr.intensity('Bold')))
+   :add_segment('local_ip', '' , colors.local_ip, attr(attr.intensity('Bold')))
+
+   :add_segment('public_ip_icon', ICON_NETWORK .. '  ', colors.public_ip, attr(attr.intensity('Bold')))
+   :add_segment('public_ip', '' , colors.public_ip, attr(attr.intensity('Bold')))
+
 
 ---@return string, string
 local function battery_info()
@@ -100,16 +120,20 @@ M.setup = function(opts)
    end
 
    wezterm.on('update-right-status', function(window, _pane)
-      local battery_text, battery_icon = battery_info()
+      -- local battery_text, battery_icon = battery_info()
 
       cells
          :update_segment_text('date_text', wezterm.strftime(valid_opts.date_format))
-         :update_segment_text('battery_icon', battery_icon)
-         :update_segment_text('battery_text', battery_text)
+         -- :update_segment_text('battery_icon', battery_icon)
+         -- :update_segment_text('battery_text', battery_text)
+         :update_segment_text('local_ip', ip.local_ip())
+         :update_segment_text('public_ip', ip.public_ip())
+
 
       window:set_right_status(
          wezterm.format(
-            cells:render({ 'date_icon', 'date_text', 'separator', 'battery_icon', 'battery_text' })
+            -- cells:render({ 'public_ip_icon', 'public_ip', 'separator', 'local_ip_icon', 'local_ip', 'separator', 'date_icon', 'date_text', 'separator', 'battery_icon', 'battery_text' })
+            cells:render({ 'public_ip_icon', 'public_ip', 'separator', 'local_ip_icon', 'local_ip', 'separator', 'date_icon', 'date_text'})
          )
       )
    end)

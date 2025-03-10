@@ -54,8 +54,8 @@ local keys = {
    { key = 'Backspace',  mods = mod.SUPER,     action = act.SendString '\u{15}' },
 
    -- copy/paste --
-   { key = 'c',          mods = 'CTRL|SHIFT',  action = act.CopyTo('Clipboard') },
-   { key = 'v',          mods = 'CTRL|SHIFT',  action = act.PasteFrom('Clipboard') },
+   { key = 'c',          mods = mod.SUPER,         action = act.CopyTo('Clipboard') },
+   { key = 'v',          mods = mod.SUPER,         action = act.PasteFrom('Clipboard') },
 
    -- tabs --
    -- tabs: spawn+close
@@ -89,8 +89,8 @@ local keys = {
          if dimensions.is_full_screen then
             return
          end
-         local new_width = dimensions.pixel_width - 50
-         local new_height = dimensions.pixel_height - 50
+         local new_width = dimensions.pixel_width - 100
+         local new_height = dimensions.pixel_height - 100
          window:set_inner_size(new_width, new_height)
       end)
    },
@@ -102,8 +102,8 @@ local keys = {
          if dimensions.is_full_screen then
             return
          end
-         local new_width = dimensions.pixel_width + 50
-         local new_height = dimensions.pixel_height + 50
+         local new_width = dimensions.pixel_width + 100
+         local new_height = dimensions.pixel_height + 100
          window:set_inner_size(new_width, new_height)
       end)
    },
@@ -241,7 +241,7 @@ local mouse_bindings = {
 }
 
 return {
-   disable_default_key_bindings = true,
+   disable_default_key_bindings = false,
    -- disable_default_mouse_bindings = true,
    leader = { key = 'Space', mods = mod.SUPER_REV },
    keys = keys,
