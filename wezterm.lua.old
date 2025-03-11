@@ -1,0 +1,141 @@
+-- Import the wezterm module
+local wezterm = require 'wezterm'
+-- Creates a config object which we will be adding our config to
+local config = wezterm.config_builder()
+-- 启用鼠标点击 URL 功能
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
+
+-- 获取当前操作系统平台
+local platform = wezterm.target_triple
+
+local is_mac = platform:find("darwin") ~= nil
+local is_windows = platform:find("windows") ~= nil
+local is_linux = platform:find("linux") ~= nil
+
+local SUPER = is_mac and "CMD" or "CTRL"
+
+config.keys = {
+    -- ⬆ 纵向分屏（默认 Ctrl+Shift+D，改成 Ctrl+-）
+    {key="-", mods=SUPER, action=wezterm.action.SplitVertical{domain="CurrentPaneDomain"}},
+
+    -- ➡ 横向分屏（默认 Ctrl+Shift+L，改成 Ctrl+\）
+    {key="\\", mods=SUPER, action=wezterm.action.SplitHorizontal{domain="CurrentPaneDomain"}},
+
+    -- 关闭当前 pane（SUPER + W，需要确认）
+    { key = "w", mods = SUPER, action = wezterm.action.CloseCurrentPane({ confirm = false }) },
+
+    -- ⬅ 切换到左侧 pane
+    {key="h", mods="ALT", action=wezterm.action.ActivatePaneDirection "Left"},
+
+    -- ⬆ 切换到上侧 pane
+    {key="k", mods="ALT", action=wezterm.action.ActivatePaneDirection "Up"},
+
+    -- ⬇ 切换到下侧 pane
+    {key="j", mods="ALT", action=wezterm.action.ActivatePaneDirection "Down"},
+
+    -- ➡ 切换到右侧 pane
+    {key="l", mods="ALT", action=wezterm.action.ActivatePaneDirection "Right"},
+    
+  }
+
+-- neapsix color 
+-- local theme = wezterm.plugin.require('https://github.com/neapsix/wezterm').main
+-- local theme = wezterm.plugin.require('https://github.com/neapsix/wezterm').moon
+-- local theme = wezterm.plugin.require('https://github.com/neapsix/wezterm').dawn
+-- config.colors = theme.colors()
+-- config.window_frame = theme.window_frame() -- needed only if using fancy tab bar
+
+-- (This is where our config will go)
+config.color_scheme = 'Tokyo Night'
+config.font =wezterm.font('JetBrains Mono', { weight = 'Bold', italic = false })
+config.window_frame = {
+  font =wezterm.font('JetBrains Mono', { weight = 'Bold'}),
+  font_size = 13,
+}
+config.font_size = 14
+config.window_background_opacity = 0.8
+-- 在 macOS 上开启窗口模糊效果，数值越大模糊越明显。
+config.macos_window_background_blur = 30
+
+-- config.window_decorations = "RESIZE"
+config.max_fps = 120
+
+local launch_menu = {}
+if wezterm.target_triple:find("windows") then
+	-- default_prog only affects local domain not default domain
+	config.default_prog = { "powershell.exe", "-NoLogo" }
+	config.default_domain = "SSH:wsl"
+end
+config.launch_menu = launch_menu
+
+config.initial_rows = 42
+config.initial_cols = 124
+
+-- 窗口标题栏字体
+wezterm.on('update-status', function(window)
+  -- Grab the utf8 character for the "powerline" left facing
+  -- solid arrow.
+  local SOLID_LEFT_ARROW = utf8.char(0xe0b2)
+
+  -- Grab the current window's configuration, and from it the
+  -- palette (this is the combination of your chosen colour scheme
+  -- including any overrides).
+  local color_scheme = window:effective_config().resolved_palette
+  local bg = color_scheme.background
+  local fg = color_scheme.foreground
+  
+  local success, stdout, stderr = wezterm.run_child_process { "curl", "-s", "https://api64.ipify.org" }
+  -- local success, stdout, stderr = wezterm.run_child_process { "curl", "-s", "https://realip.cc/simple" }
+  wezterm.sleep_ms(1000)
+  local public_ip=stdout
+  
+  --   if not public_ip then
+  --     public_ip = 'N/A'
+  --   end
+  
+  -- 获取本地 IP 地址（Linux/macOS）
+  local local_ip = "unknown"
+  if is_mac then
+    -- macOS 使用 ipconfig 命令获取 IP 地址
+    local success, stdout, stderr = wezterm.run_child_process { "bash", "-c", "ipconfig getifaddr en0" }
+    wezterm.sleep_ms(100)
+    local_ip = stdout:match("%S+") or "unknown"
+
+  elseif is_linux then
+    -- Linux 使用 hostname 命令获取 IP 地址
+    local success, stdout, stderr = wezterm.run_child_process { "bash", "-c", "hostname -I" }
+    wezterm.sleep_ms(100)
+    local_ip = stdout:match("%S+") or "unknown"
+
+  elseif is_windows then
+    -- Windows 使用 ipconfig 获取 IP 地址
+    local success, stdout, stderr = wezterm.run_child_process { "cmd", "/c", "ipconfig" }
+    wezterm.sleep_ms(100)
+    local_ip = stdout:match("IPv4 地址[ .]+: ([%d%.]+)") or "unknown"
+  end
+
+
+  local date = wezterm.strftime("%Y-%m-%d %H:%M:%S")
+
+
+  local short_hostname = wezterm.hostname()
+  --  在状态栏显示信息
+  window:set_right_status(wezterm.format({
+    -- First, we draw the arrow...
+    { Background = { Color = 'none' } },
+    { Foreground = { Color = bg } },
+    { Text = SOLID_LEFT_ARROW },
+    -- Then we draw our text
+    { Background = { Color = bg } },
+    { Foreground = { Color = fg } },
+    -- { Text = short_hostname },
+    { Text = wezterm.nerdfonts.md_network .. "  " .. public_ip },
+    { Text = " | " },
+    { Text = wezterm.nerdfonts.md_lan .. "  " .. local_ip },
+    { Text = " | " },    
+    { Text = wezterm.nerdfonts.md_clock .. "  " .. date }
+  }))
+end)
+
+-- Returns our config to be evaluated. We must always do this at the bottom of this file
+return config
