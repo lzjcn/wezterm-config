@@ -38,9 +38,9 @@ return {
          format = '$0',
       },
       -- implicit mailto link
-      {
-         regex = '\\b\\w+@[\\w-]+(\\.[\\w-]+)+\\b',
-         format = 'mailto:$0',
-      },
+      -- {
+      --    regex = '\\b\\w+@[\\w-]+(\\.[\\w-]+)+\\b',
+      --    format = 'mailto:$0',
+      -- },
    },
 }
